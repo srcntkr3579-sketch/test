@@ -255,8 +255,9 @@
                             • *T.C. No:* ${tcNo}\n +
                             • *Telefon:* ${phone};
 
-            // EN GÜVENLİ VE RESMİ WHATSAPP API YÖNLENDİRME LİNKİ
-            const whatsappUrl = https://whatsapp.com{ADMIN_WHATSAPP}&text=${encodeURIComponent(message)};
+            // KESİN ÇÖZÜM: RESMİ WHATSAPP API YÖNLENDİRME FORMATI
+            const whatsappUrl = "https://api.whatsapp.com/send?phone=" + ADMIN_WHATSAPP + "&text=" + encodeURIComponent(message);
             
-            // Tarayıcı engeline takılmamak için doğrudan yönlendirme yapıyoruz
+            // Sayfayı doğrudan WhatsApp'a yönlendirir (Açılır pencere engeline takılmaz)
             window.location.href = whatsappUrl;
+        }
