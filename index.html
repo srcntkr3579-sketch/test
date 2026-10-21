@@ -67,10 +67,11 @@
             outline: none;
             border-color: #dc3545;
         }
-        .whatsapp-submit {
+        .whatsapp-link {
             display: block;
             background-color: #25d366;
             color: white;
+            text-decoration: none;
             padding: 14px;
             font-size: 16px;
             font-weight: bold;
@@ -80,10 +81,8 @@
             transition: background 0.2s;
             margin-top: 20px;
             cursor: pointer;
-            border: none;
-            width: 100%;
         }
-        .whatsapp-submit:hover {
+        .whatsapp-link:hover {
             background-color: #1ebd58;
         }
         .alert {
@@ -129,8 +128,8 @@
         <h2>Online Randevu Formu</h2>
         <div id="errorAlert" class="alert alert-danger"></div>
         
-        <!-- Formun gönderimini JavaScript fonksiyonuna bağladık -->
-        <form id="appointmentForm" onsubmit="return gonderRandevu(event)">
+        <!-- Input alanlarına her değişiklikte linki güncelleyen oninput eklendi -->
+        <form id="appointmentForm" oninput="updateWhatsAppLink()">
             <div class="form-group">
                 <label for="tcNo">T.C. Kimlik Numarası</label>
                 <input type="text" id="tcNo" maxlength="11" pattern="\d{11}" required placeholder="11 haneli T.C. No">
@@ -152,8 +151,8 @@
                 <div class="slot-container" id="slotsWrapper"></div>
             </div>
             
-            <!-- Buton tipini 'submit' yaptık, böylece tarayıcı form kurallarını zorunlu çalıştırır -->
-            <button type="submit" class="whatsapp-submit">Randevuyu Onayla ve WhatsApp ile Gönder</button>
+            <!-- Güvenli, doğrudan tıklanabilir standart HTML link yapısı -->
+            <a id="wsBtn" href="#" target="_blank" class="whatsapp-link" onclick="return validateBeforeSend(event)">Randevuyu Onayla ve WhatsApp ile Gönder</a>
         </form>
     </div>
 </main>
@@ -210,6 +209,7 @@
             btn.onclick = function() { selectSlotTime(btn, slot); };
             slotsWrapper.appendChild(btn);
         });
+        updateWhatsAppLink();
     }
 
     function selectSlotTime(element, slot) {
@@ -217,6 +217,7 @@
         buttons.forEach(b => b.classList.remove('selected'));
         element.classList.add('selected');
         selectedSlot = slot;
+        updateWhatsAppLink();
     }
 
     function showError(message) {
@@ -225,19 +226,16 @@
         errorAlert.style.display = 'block';
     }
 
-    function gonderRandevu(event) {
-        // Varsayılan form yenilemesini engelliyoruz
-        event.preventDefault();
-
+    function updateWhatsAppLink() {
         const tcNo = document.getElementById('tcNo').value;
         const fullName = document.getElementById('fullName').value;
         const phone = document.getElementById('phone').value;
         const appDate = document.getElementById('appDate').value;
+        const btn = document.getElementById('wsBtn');
 
-        // Saat seçimi kontrolü (HTML doğrulaması dışında olduğu için el ile kontrol şart)
-        if (!selectedSlot) {
-            alert("Lütfen bir randevu saati seçiniz.");
-            return false;
+        if(!tcNo || !fullName || !phone || !appDate || !selectedSlot) {
+            btn.href = "#";
+            return;
         }
 
         const message = "🏥 *YENİ RANDEVU KAYDI*\n\n" +
@@ -248,11 +246,26 @@
                         "• *T.C. No:* " + tcNo + "\n" +
                         "• *Telefon:* " + phone;
 
-        const whatsappUrl = "https://whatsapp.com" + ADMIN_WHATSAPP + "&text=" + encodeURIComponent(message);
+        // Eklenti korumalarına takılmayan en stabil yerel bağlantı protokolü
+        btn.href = "https://whatsapp.com" + ADMIN_WHATSAPP + "&text=" + encodeURIComponent(message);
+    }
 
-        // Doğrudan sayfayı yönlendirir (Masaüstü yerel dosya güvenliğini aşar)
-        window.location.href = whatsappUrl;
-        return false;
+    function validateBeforeSend(event) {
+        const tcNo = document.getElementById('tcNo').value;
+        const fullName = document.getElementById('fullName').value;
+        const phone = document.getElementById('phone').value;
+        const appDate = document.getElementById('appDate').value;
+
+        if(!tcNo || !fullName || !phone || !appDate) {
+            alert("Lütfen formdaki tüm alanları eksiksiz doldurunuz.");
+            event.preventDefault();
+            return false;
+        }
+        if (!selectedSlot) {
+            alert("Lütfen bir randevu saati seçiniz.");
+            event.preventDefault();
+            return false;
+        }
     }
 </script>
 </body>
