@@ -246,6 +246,7 @@
             const phone = document.getElementById('phone').value;
             const appDate = document.getElementById('appDate').value;
 
+            // WhatsApp Mesaj İçeriği
             const message = 🏥 *YENİ RANDEVU KAYDI*\n\n +
                             • *Poliklinik:* Kardiyoloji\n +
                             • *Tarih:* ${appDate}\n +
@@ -254,15 +255,8 @@
                             • *T.C. No:* ${tcNo}\n +
                             • *Telefon:* ${phone};
 
+            // EN GÜVENLİ VE RESMİ WHATSAPP API YÖNLENDİRME LİNKİ
             const whatsappUrl = https://whatsapp.com{ADMIN_WHATSAPP}&text=${encodeURIComponent(message)};
-            window.open(whatsappUrl, '_blank');
-        }
-
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js');
-            });
-        }
-    </script>
-</body>
-</html>
+            
+            // Tarayıcı engeline takılmamak için doğrudan yönlendirme yapıyoruz
+            window.location.href = whatsappUrl;
