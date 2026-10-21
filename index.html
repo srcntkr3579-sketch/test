@@ -129,12 +129,7 @@
         <h2>Online Randevu Formu</h2>
         <div id="errorAlert" class="alert alert-danger"></div>
         
-        <!-- Güvenli Saf HTML Form Protokolü -->
-        <form id="appointmentForm" action="https://whatsapp.com" method="GET" target="_blank" onsubmit="return hazirlaVeGonder(event)">
-            <!-- WhatsApp API parametreleri hidden input olarak güvenle taşınır -->
-            <input type="hidden" name="phone" id="wsPhone" value="905000000000">
-            <input type="hidden" name="text" id="wsText" value="">
-
+        <form id="appointmentForm" onsubmit="gonderRandevu(event)">
             <div class="form-group">
                 <label for="tcNo">T.C. Kimlik Numarası</label>
                 <input type="text" id="tcNo" maxlength="11" pattern="\d{11}" required placeholder="11 haneli T.C. No">
@@ -162,9 +157,8 @@
 </main>
 
 <script>
-    // --- AYAR: KENDİ WHATSAPP NUMARANIZI BURAYA YAZIN (BAŞINDA 90 OLSUN) ---
-    const ADMIN_WHATSAPP = "905069379838"; 
-    document.getElementById('wsPhone').value = ADMIN_WHATSAPP;
+    // ⚠️ BURAYA KENDİ NUMARANIZI YAZIN (Başında ülke kodu 90 olsun, sıfır olmasın. Örn: "90532XXXXXXX")
+    const ADMIN_WHATSAPP = "905000000000"; 
 
     const timeSlots = ["09:00", "09:40", "10:20", "11:00", "11:40", "13:30", "14:10", "14:50", "15:30", "16:10"];
     let selectedSlot = "";
@@ -230,10 +224,11 @@
         errorAlert.style.display = 'block';
     }
 
-    function hazirlaVeGonder(event) {
+    function gonderRandevu(event) {
+        event.preventDefault();
+
         if (!selectedSlot) {
             alert("Lütfen bir randevu saati seçiniz.");
-            event.preventDefault();
             return false;
         }
 
@@ -242,20 +237,27 @@
         const phoneField = document.getElementById('phoneField').value;
         const appDate = document.getElementById('appDate').value;
 
-        // Metin eklenti filtrelerine yakalanmasın diye sadeleştirildi
-        const message = "🏥 RANDEVU TALEBI\n\n" +
-                        "Poliklinik: Kardiyoloji\n" +
-                        "Tarih: " + appDate + "\n" +
-                        "Saat: " + selectedSlot + "\n" +
-                        "Hasta: " + fullName + "\n" +
-                        "TC: " + tcNo + "\n" +
-                        "Tel: " + phoneField;
+        // Randevu Metin Taslağı
+        const message = "🏥 *YENİ RANDEVU KAYDI*\n\n" +
+                        "• *Poliklinik:* Kardiyoloji\n" +
+                        "• *Tarih:* " + appDate + "\n" +
+                        "• *Saat:* " + selectedSlot + "\n" +
+                        "• *Hasta Adı:* " + fullName + "\n" +
+                        "• *T.C. No:* " + tcNo + "\n" +
+                        "• *Telefon:* " + phoneField;
 
-        // Form verisi gönderilmeden hemen önce metin parametresi atanır
-        document.getElementById('wsText').value = message;
+        // Hem mobilde hem masaüstünde çalışan evrensel wa.me link mimarisi
+        const whatsappUrl = "https://wa.me" + ADMIN_WHATSAPP + "?text=" + encodeURIComponent(message);
+
+        // Tarayıcı ve mobil işletim sistemi uygulama yönlendirme tetikleyicisi
+        const gizliLink = document.createElement('a');
+        gizliLink.href = whatsappUrl;
+        gizliLink.target = '_blank';
+        gizliLink.rel = 'noopener noreferrer';
         
-        // true dönerek HTML formunun kendi kendine harici sayfayı açmasını sağlıyoruz
-        return true;
+        document.body.appendChild(gizliLink);
+        gizliLink.click();
+        document.body.removeChild(gizliLink);
     }
 </script>
 </body>
