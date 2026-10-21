@@ -69,20 +69,22 @@
             outline: none;
             border-color: #dc3545;
         }
-        .btn {
+        .whatsapp-link {
+            display: block;
             background-color: #25d366;
             color: white;
-            border: none;
+            text-decoration: none;
             padding: 14px;
             font-size: 16px;
             font-weight: bold;
             border-radius: 8px;
-            cursor: pointer;
-            width: 100%;
+            text-align: center;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             transition: background 0.2s;
+            margin-top: 20px;
+            cursor: pointer;
         }
-        .btn:active {
+        .whatsapp-link:hover {
             background-color: #1ebd58;
         }
         .alert {
@@ -128,7 +130,7 @@
             <h2>Online Randevu Formu</h2>
             <div id="errorAlert" class="alert alert-danger"></div>
             
-            <form id="appointmentForm" onsubmit="submitForm(event)">
+            <form id="appointmentForm" oninput="updateWhatsAppLink()">
                 <div class="form-group">
                     <label for="tcNo">T.C. Kimlik Numarası</label>
                     <input type="text" id="tcNo" maxlength="11" pattern="\d{11}" required placeholder="11 haneli T.C. No">
@@ -151,14 +153,14 @@
                     <div class="slot-container" id="slotsWrapper"></div>
                 </div>
 
-                <button type="submit" class="btn">Randevuyu Onayla ve WhatsApp ile Gönder</button>
+                <a id="wsBtn" href="#" target="_blank" class="whatsapp-link" onclick="return validateBeforeSend(event)">Randevuyu Onayla ve WhatsApp ile Gönder</a>
             </form>
         </div>
     </main>
 
     <script>
         // --- AYAR: KENDİ WHATSAPP NUMARANIZI BURAYA YAZIN (BAŞINDA 90 OLSUN, SIFIR OLMASIN) ---
-        const ADMIN_WHATSAPP = "905069379838"; 
+        const ADMIN_WHATSAPP = "905000000000"; 
 
         const timeSlots = ["09:00", "09:40", "10:20", "11:00", "11:40", "13:30", "14:10", "14:50", "15:30", "16:10"];
         let selectedSlot = "";
@@ -222,6 +224,7 @@
             buttons.forEach(b => b.classList.remove('selected'));
             element.classList.add('selected');
             selectedSlot = slot;
+            updateWhatsAppLink();
         }
 
         function showError(message) {
@@ -230,18 +233,17 @@
             errorAlert.style.display = 'block';
         }
 
-        function submitForm(event) {
-            event.preventDefault();
-            
-            if (!selectedSlot) {
-                alert("Lütfen bir randevu saati seçiniz.");
-                return;
-            }
-
+        function updateWhatsAppLink() {
             const tcNo = document.getElementById('tcNo').value;
             const fullName = document.getElementById('fullName').value;
             const phone = document.getElementById('phone').value;
             const appDate = document.getElementById('appDate').value;
+            const btn = document.getElementById('wsBtn');
+
+            if(!tcNo || !fullName || !phone || !appDate || !selectedSlot) {
+                btn.href = "#";
+                return;
+            }
 
             const message = 🏥 *YENİ RANDEVU KAYDI*\n\n +
                             • *Poliklinik:* Kardiyoloji\n +
@@ -251,23 +253,20 @@
                             • *T.C. No:* ${tcNo}\n +
                             • *Telefon:* ${phone};
 
-            // SANSÜRÜ AŞAN GÜVENLİ LİNK OLUŞTURMA ALGORİTMASI
-            const p1 = "https://api.";
-            const p2 = "https://www.whatsapp.com/";
-            const p3 = "send";
-            const q = String.fromCharCode(63); // Soru işareti (?) karakterini dinamik üretir
-            
-            const fullUrl = p1 + p2 + p3 + q + "phone=" + ADMIN_WHATSAPP + "&text=" + encodeURIComponent(message);
-            
-            // Sayfayı doğrudan WhatsApp'a yönlendirir
-            window.location.href = fullUrl;
+            btn.href = "https://whatsapp.com" + ADMIN_WHATSAPP + "&text=" + encodeURIComponent(message);
         }
 
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js');
-            });
-        }
-    </script>
-</body>
-</html>
+        function validateBeforeSend(event) {
+            const tcNo = document.getElementById('tcNo').value;
+            const fullName = document.getElementById('fullName').value;
+            const phone = document.getElementById('phone').value;
+            const appDate = document.getElementById('appDate').value;
+
+            if(!tcNo || !fullName || !phone || !appDate) {
+                alert("Lütfen formdaki tüm alanları eksiksiz doldurunuz.");
+                event.preventDefault();
+                return false;
+            }
+            if (!selectedSlot) {
+                alert("Lütfen bir randevu saati seçiniz.");
+                event.preventDefault();
