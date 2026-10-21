@@ -252,9 +252,11 @@
                             • *T.C. No:* ${tcNo}\n +
                             • *Telefon:* ${phone};
 
-            // KESİN ÇÖZÜM: RESMİ VE EVRENSEL WHATSAPP API YÖNLENDİRMESİ
-            const whatsappUrl = "https://whatsapp.com" + ADMIN_WHATSAPP + "&text=" + encodeURIComponent(message);
-            window.location.href = whatsappUrl;
+            // KESİN ÇÖZÜM: PARAMETRE BOZULMALARINI ENGELLEYEN YAPI
+            const baseApiUrl = "https://whatsapp.com";
+            const targetUrl = baseApiUrl + "?phone=" + ADMIN_WHATSAPP + "&text=" + encodeURIComponent(message);
+            
+            window.location.href = targetUrl;
         }
 
         if ('serviceWorker' in navigator) {
