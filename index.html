@@ -81,6 +81,8 @@
             transition: background 0.2s;
             margin-top: 20px;
             cursor: pointer;
+            border: none;
+            width: 100%;
         }
         .whatsapp-link:hover {
             background-color: #1ebd58;
@@ -127,7 +129,7 @@
     <div class="card">
         <h2>Online Randevu Formu</h2>
         <div id="errorAlert" class="alert alert-danger"></div>
-        <form id="appointmentForm" oninput="updateWhatsAppLink()">
+        <form id="appointmentForm">
             <div class="form-group">
                 <label for="tcNo">T.C. Kimlik Numarası</label>
                 <input type="text" id="tcNo" maxlength="11" pattern="\d{11}" required placeholder="11 haneli T.C. No">
@@ -148,7 +150,8 @@
                 <label>Randevu Saati (Günlük Kontenjan: 10 Kişi)</label>
                 <div class="slot-container" id="slotsWrapper"></div>
             </div>
-            <a id="wsBtn" href="#" target="_blank" class="whatsapp-link" onclick="return validateBeforeSend(event)">Randevuyu Onayla ve WhatsApp ile Gönder</a>
+            <!-- onclick tetiklemesi doğrudan JavaScript fonksiyonuna yönlendirildi -->
+            <button type="button" class="whatsapp-link" onclick="gonderRandevu(event)">Randevuyu Onayla ve WhatsApp ile Gönder</button>
         </form>
     </div>
 </main>
@@ -175,7 +178,6 @@
         const selectedDate = new Date(dateInput);
         const dayOfWeek = selectedDate.getDay();
 
-        // 1 = Pazartesi, 2 = Salı, 4 = Perşembe
         if (dayOfWeek !== 1 && dayOfWeek !== 2 && dayOfWeek !== 4) {
             showError("Kardiyoloji polikliniği sadece Pazartesi, Salı ve Perşembe günleri hizmet vermektedir.");
             return;
@@ -213,7 +215,6 @@
         buttons.forEach(b => b.classList.remove('selected'));
         element.classList.add('selected');
         selectedSlot = slot;
-        updateWhatsAppLink();
     }
 
     function showError(message) {
@@ -222,18 +223,24 @@
         errorAlert.style.display = 'block';
     }
 
-    function updateWhatsAppLink() {
+    // Doğrudan tıklama anında çalışan güvenli gönderme fonksiyonu
+    function gonderRandevu(event) {
         const tcNo = document.getElementById('tcNo').value;
         const fullName = document.getElementById('fullName').value;
         const phone = document.getElementById('phone').value;
         const appDate = document.getElementById('appDate').value;
-        const btn = document.getElementById('wsBtn');
 
-        if(!tcNo || !fullName || !phone || !appDate || !selectedSlot) {
-            btn.href = "#";
-            return;
+        // Form Doğrulama
+        if(!tcNo || !fullName || !phone || !appDate) {
+            alert("Lütfen formdaki tüm alanları eksiksiz doldurunuz.");
+            return false;
+        }
+        if (!selectedSlot) {
+            alert("Lütfen bir randevu saati seçiniz.");
+            return false;
         }
 
+        // Mesaj Şablonu Oluşturma
         const message = "🏥 *YENİ RANDEVU KAYDI*\n\n" +
                         "• *Poliklinik:* Kardiyoloji\n" +
                         "• *Tarih:* " + appDate + "\n" +
@@ -242,25 +249,11 @@
                         "• *T.C. No:* " + tcNo + "\n" +
                         "• *Telefon:* " + phone;
 
-        btn.href = "https://whatsapp.com" + ADMIN_WHATSAPP + "&text=" + encodeURIComponent(message);
-    }
+        // Tarayıcı güvenlik protokolünü aşan evrensel WhatsApp API linki
+        const whatsappUrl = "https://whatsapp.com" + ADMIN_WHATSAPP + "&text=" + encodeURIComponent(message);
 
-    function validateBeforeSend(event) {
-        const tcNo = document.getElementById('tcNo').value;
-        const fullName = document.getElementById('fullName').value;
-        const phone = document.getElementById('phone').value;
-        const appDate = document.getElementById('appDate').value;
-
-        if(!tcNo || !fullName || !phone || !appDate) {
-            alert("Lütfen formdaki tüm alanları eksiksiz doldurunuz.");
-            event.preventDefault();
-            return false;
-        }
-        if (!selectedSlot) {
-            alert("Lütfen bir randevu saati seçiniz.");
-            event.preventDefault();
-            return false;
-        }
+        // Yeni sekmeyi tarayıcı engeline takılmadan tetikler
+        window.open(whatsappUrl, '_blank');
     }
 </script>
 </body>
