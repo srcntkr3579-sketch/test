@@ -158,7 +158,7 @@
 
     <script>
         // --- AYAR: KENDİ WHATSAPP NUMARANIZI BURAYA YAZIN (BAŞINDA 90 OLSUN, SIFIR OLMASIN) ---
-        const ADMIN_WHATSAPP = "905069379838"; 
+        const ADMIN_WHATSAPP = "905000000000"; 
 
         // Günlük 10 adet sabit zaman dilimi
         const timeSlots = ["09:00", "09:40", "10:20", "11:00", "11:40", "13:30", "14:10", "14:50", "15:30", "16:10"];
@@ -178,15 +178,13 @@
             if (!dateInput) return;
 
             const selectedDate = new Date(dateInput);
-            const dayOfWeek = selectedDate.getDay(); // 0: Pazar, 1: Pzt, 2: Salı, 3: Çarş, 4: Perş, 5: Cuma, 6: Cmt
+            const dayOfWeek = selectedDate.getDay(); 
             
-            // Sadece Pazartesi (1), Salı (2) ve Perşembe (4) açık
             if (dayOfWeek !== 1 && dayOfWeek !== 2 && dayOfWeek !== 4) {
                 showError("Kardiyoloji polikliniği sadece Pazartesi, Salı ve Perşembe günleri hizmet vermektedir.");
                 return;
             }
 
-            // Resmi Tatil ve Bayram Koruması
             const year = selectedDate.getFullYear();
             const month = selectedDate.getMonth() + 1;
             const day = selectedDate.getDate();
@@ -235,7 +233,6 @@
 
         function submitForm(event) {
             event.preventDefault();
-            alert("WhatsApp'a yönlendiriliyorsunuz, lütfen bekleyin...");
             
             if (!selectedSlot) {
                 alert("Lütfen bir randevu saati seçiniz.");
@@ -247,7 +244,6 @@
             const phone = document.getElementById('phone').value;
             const appDate = document.getElementById('appDate').value;
 
-            // WhatsApp Mesaj İçeriği
             const message = 🏥 *YENİ RANDEVU KAYDI*\n\n +
                             • *Poliklinik:* Kardiyoloji\n +
                             • *Tarih:* ${appDate}\n +
@@ -256,9 +252,15 @@
                             • *T.C. No:* ${tcNo}\n +
                             • *Telefon:* ${phone};
 
-            // KESİN ÇÖZÜM: RESMİ WHATSAPP API YÖNLENDİRME FORMATI
-            const whatsappUrl = "https://api.whatsapp.com/send?phone=" + ADMIN_WHATSAPP + "&text=" + encodeURIComponent(message);
-            
-            // Sayfayı doğrudan WhatsApp'a yönlendirir (Açılır pencere engeline takılmaz)
+            const whatsappUrl = "https://whatsapp.com" + ADMIN_WHATSAPP + "&text=" + encodeURIComponent(message);
             window.location.href = whatsappUrl;
         }
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js');
+            });
+        }
+    </script>
+</body>
+</html>
