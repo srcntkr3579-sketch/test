@@ -139,7 +139,7 @@
                 </div>
                 <div class="form-group">
                     <label for="phone">Telefon Numarası</label>
-                    <input type="tel" id="phone" required placeholder="905069379838">
+                    <input type="tel" id="phone" required placeholder="05XXXXXXXXX">
                 </div>
                 <div class="form-group">
                     <label for="appDate">Randevu Tarihi</label>
@@ -158,7 +158,7 @@
 
     <script>
         // --- AYAR: KENDİ WHATSAPP NUMARANIZI BURAYA YAZIN (BAŞINDA 90 OLSUN, SIFIR OLMASIN) ---
-        const ADMIN_WHATSAPP = "905000000000"; 
+        const ADMIN_WHATSAPP = "905069379838"; 
 
         // Günlük 10 adet sabit zaman dilimi
         const timeSlots = ["09:00", "09:40", "10:20", "11:00", "11:40", "13:30", "14:10", "14:50", "15:30", "16:10"];
@@ -252,6 +252,7 @@
                             • *T.C. No:* ${tcNo}\n +
                             • *Telefon:* ${phone};
 
+            // KESİN ÇÖZÜM: RESMİ VE EVRENSEL WHATSAPP API YÖNLENDİRMESİ
             const whatsappUrl = "https://whatsapp.com" + ADMIN_WHATSAPP + "&text=" + encodeURIComponent(message);
             window.location.href = whatsappUrl;
         }
