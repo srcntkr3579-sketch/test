@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kardiyoloji Randevu Sistemi</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#dc3545">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        header {
+            background-color: #dc3545;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        main {
+            flex: 1;
+            padding: 20px;
+            max-width: 500px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        h2 {
+            margin-top: 0;
+            color: #dc3545;
+            font-size: 18px;
+            border-bottom: 2px solid #f8f9fa;
+            padding-bottom: 8px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        input:focus {
+            outline: none;
+            border-color: #dc3545;
+        }
+        .btn {
+            background-color: #25d366;
+            color: white;
+            border: none;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: background 0.2s;
+        }
+        .btn:active {
+            background-color: #1ebd58;
+        }
+        .alert {
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .slot-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .slot-btn {
+            background: #f8f9fa;
+            border: 1px solid #ced4da;
+            padding: 10px;
+            text-align: center;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .slot-btn.selected {
+            background: #dc3545;
+            color: white;
+            border-color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+
+    <header>🏥 Kardiyoloji Polikliniği</header>
+
+    <main>
+        <div class="card">
+            <h2>Online Randevu Formu</h2>
+            <div id="errorAlert" class="alert alert-danger"></div>
+            
+            <form id="appointmentForm" onsubmit="submitForm(event)">
+                <div class="form-group">
+                    <label for="tcNo">T.C. Kimlik Numarası</label>
+                    <input type="text" id="tcNo" maxlength="11" pattern="\d{11}" required placeholder="11 haneli T.C. No">
+                </div>
+                <div class="form-group">
+                    <label for="fullName">Ad Soyad</label>
+                    <input type="text" id="fullName" required placeholder="Adınız ve Soyadınız">
+                </div>
+                <div class="form-group">
+                    <label for="phone">Telefon Numarası</label>
+                    <input type="tel" id="phone" required placeholder="905069379838">
+                </div>
+                <div class="form-group">
+                    <label for="appDate">Randevu Tarihi</label>
+                    <input type="date" id="appDate" required onchange="checkDateValidity()">
+                </div>
+                
+                <div class="form-group" id="slotSection" style="display:none;">
+                    <label>Randevu Saati (Günlük Kontenjan: 10 Kişi)</label>
+                    <div class="slot-container" id="slotsWrapper"></div>
+                </div>
+
+                <button type="submit" class="btn">Randevuyu Onayla ve WhatsApp ile Gönder</button>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        // --- AYAR: KENDİ WHATSAPP NUMARANIZI BURAYA YAZIN (BAŞINDA 90 OLSUN, SIFIR OLMASIN) ---
+        const ADMIN_WHATSAPP = "905000000000"; 
+
+        // Günlük 10 adet sabit zaman dilimi
+        const timeSlots = ["09:00", "09:40", "10:20", "11:00", "11:40", "13:30", "14:10", "14:50", "15:30", "16:10"];
+        let selectedSlot = "";
+
+        function checkDateValidity() {
+            const dateInput = document.getElementById('appDate').value;
+            const errorAlert = document.getElementById('errorAlert');
+            const slotSection = document.getElementById('slotSection');
+            const slotsWrapper = document.getElementById('slotsWrapper');
+            
+            errorAlert.style.display = 'none';
+            slotSection.style.display = 'none';
+            slotsWrapper.innerHTML = '';
+            selectedSlot = "";
+
+            if (!dateInput) return;
+
+            const selectedDate = new Date(dateInput);
+            const dayOfWeek = selectedDate.getDay(); // 0: Pazar, 1: Pzt, 2: Salı, 3: Çarş, 4: Perş, 5: Cuma, 6: Cmt
+            
+            // Sadece Pazartesi (1), Salı (2) ve Perşembe (4) açık
+            if (dayOfWeek !== 1 && dayOfWeek !== 2 && dayOfWeek !== 4) {
+                showError("Kardiyoloji polikliniği sadece Pazartesi, Salı ve Perşembe günleri hizmet vermektedir.");
+                return;
+            }
+
+            // Resmi Tatil ve Bayram Koruması
+            const year = selectedDate.getFullYear();
+            const month = selectedDate.getMonth() + 1;
+            const day = selectedDate.getDate();
+            const mmdd = ${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')};
+
+            const publicHolidays = [
+                "01-01", "04-23", "05-01", "05-19", "07-15", "08-30", "10-29"
+            ];
+
+            const dynamicHolidays = [
+                "2026-03-19", "2026-03-20", "2026-03-21", "2026-03-22",
+                "2026-05-26", "2026-05-27", "2026-05-28", "2026-05-29", "2026-05-30",
+                "2027-03-09", "2027-03-10", "2027-03-11",
+                "2027-05-16", "2027-05-17", "2027-05-18", "2027-05-19"
+            ];
+
+            const fullDateStr = ${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')};
+
+            if (publicHolidays.includes(mmdd) || dynamicHolidays.includes(fullDateStr)) {
+                showError("Seçtiğiniz tarih resmi tatil veya bayram gününe denk geldiği için polikliniğimiz kapalıdır.");
+                return;
+            }
+
+            slotSection.style.display = 'block';
+            timeSlots.forEach(slot => {
+                const btn = document.createElement('div');
+                btn.className = 'slot-btn';
+                btn.innerText = slot;
+                btn.onclick = () => selectSlotTime(btn, slot);
+                slotsWrapper.appendChild(btn);
+            });
+        }
+
+        function selectSlotTime(element, slot) {
+            const buttons = document.querySelectorAll('.slot-btn');
+            buttons.forEach(b => b.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedSlot = slot;
+        }
+
+        function showError(message) {
+            const errorAlert = document.getElementById('errorAlert');
+            errorAlert.innerText = message;
+            errorAlert.style.display = 'block';
+        }
+
+        function submitForm(event) {
+            event.preventDefault();
+            
+            if (!selectedSlot) {
+                alert("Lütfen bir randevu saati seçiniz.");
+                return;
+            }
+
+            const tcNo = document.getElementById('tcNo').value;
+            const fullName = document.getElementById('fullName').value;
+            const phone = document.getElementById('phone').value;
+            const appDate = document.getElementById('appDate').value;
+
+            const message = 🏥 *YENİ RANDEVU KAYDI*\n\n +
+                            • *Poliklinik:* Kardiyoloji\n +
+                            • *Tarih:* ${appDate}\n +
+                            • *Saat:* ${selectedSlot}\n +
+                            • *Hasta Adı:* ${fullName}\n +
+                            • *T.C. No:* ${tcNo}\n +
+                            • *Telefon:* ${phone};
+
+            const whatsappUrl = https://whatsapp.com{ADMIN_WHATSAPP}&text=${encodeURIComponent(message)};
+            window.open(whatsappUrl, '_blank');
+        }
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js');
+            });
+        }
+    </script>
+</body>
+</html>
