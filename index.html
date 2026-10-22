@@ -148,7 +148,7 @@
                 <input type="date" id="appDate" required onchange="checkDateValidity()">
             </div>
             <div class="form-group" id="slotSection" style="display:none;">
-                <label>Randevu Saati (Günlük Kontenjan: 10 Kişi)</label>
+                <label>Randevu Saati (Günlük Kontenjan: Max 10 Kişi)</label>
                 <div class="slot-container" id="slotsWrapper"></div>
             </div>
             
@@ -159,7 +159,9 @@
 
 <script>
     const ADMIN_WHATSAPP = "905069379838"; 
-    const timeSlots = ["09:00", "09:40", "10:20", "11:00", "11:40", "13:30", "14:10", "14:50", "15:30", "16:10"];
+    
+    // 08:30-10:00 aralığında tam 10 randevu oluşturacak yeni zaman serisi
+    const timeSlots = ["08:30", "08:40", "08:50", "09:00", "09:10", "09:20", "09:30", "09:40", "09:50", "10:00"];
     let selectedSlot = "";
 
     function checkDateValidity() {
@@ -244,13 +246,12 @@
                         "TC: " + tcNo + "\n" +
                         "Tel: " + phoneField;
 
-        // "https://whatsapp.com" adresi eklentiler okuyamasın diye Base64 ile şifrelendi
+        // Base64 Zırhlı URL Koruma Yapısı
         const kriptoAdres = "aHR0cHM6Ly9hcGkud2hhdHNhcHAuY29tL3NlbmQ/cGhvbmU9"; 
         const cozulmusAdres = atob(kriptoAdres); 
         
         const finalUrl = cozulmusAdres + ADMIN_WHATSAPP + "&text=" + encodeURIComponent(message);
 
-        // Doğrudan tarayıcı komutuyla temiz geçiş sağlanır
         window.location.href = finalUrl;
         return false;
     }
