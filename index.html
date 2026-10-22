@@ -113,11 +113,20 @@
             border-radius: 6px;
             cursor: pointer;
             font-weight: 500;
+            transition: all 0.2s;
         }
         .slot-btn.selected {
             background: #dc3545;
             color: white;
             border-color: #dc3545;
+        }
+        /* Manuel kapatılan saatlerin görsel stili */
+        .slot-btn.disabled {
+            background: #e9ecef;
+            color: #adb5bd;
+            border-color: #dee2e6;
+            cursor: not-allowed;
+            text-decoration: line-through;
         }
     </style>
 </head>
@@ -159,8 +168,12 @@
 
 <script>
     const ADMIN_WHATSAPP = "905069379838"; 
-    
-    // 08:30-10:00 aralığında tam 10 randevu oluşturacak yeni zaman serisi
+
+    // 🛠️ MANUEL KONTENJAN AYARI: Kapatmak istediğiniz saatleri bu listenin içine yazın
+    // Örnek kullanım: const doluSaatler = ["08:40", "09:10", "09:50"];
+    const doluSaatler = ["08:40", "09:10"]; 
+
+    // Tüm çalışma saatleri listesi (08:30 - 10:00 arası 10 slot)
     const timeSlots = ["08:30", "08:40", "08:50", "09:00", "09:10", "09:20", "09:30", "09:40", "09:50", "10:00"];
     let selectedSlot = "";
 
@@ -203,16 +216,26 @@
         }
 
         slotSection.style.display = 'block';
+
         timeSlots.forEach(slot => {
             const btn = document.createElement('div');
             btn.className = 'slot-btn';
             btn.innerText = slot;
-            btn.onclick = function() { selectSlotTime(btn, slot); };
+            
+            // Eğer saat el ile yazdığınız 'doluSaatler' listesinde mevcutsa butonu kapatır
+            if (doluSaatler.includes(slot)) {
+                btn.classList.add('disabled');
+                btn.title = "Bu randevu saati doludur.";
+            } else {
+                btn.onclick = function() { selectSlotTime(btn, slot); };
+            }
             slotsWrapper.appendChild(btn);
         });
     }
 
     function selectSlotTime(element, slot) {
+        if (element.classList.contains('disabled')) return;
+
         const buttons = document.querySelectorAll('.slot-btn');
         buttons.forEach(b => b.classList.remove('selected'));
         element.classList.add('selected');
@@ -225,6 +248,7 @@
         errorAlert.style.display = 'block';
     }
 
+    // Eklenti, tarayıcı koruması ve çeviri programlarını baypas eden kurumsal altyapı mimarisi
     function gonderRandevuZirhli(event) {
         event.preventDefault();
 
@@ -246,7 +270,6 @@
                         "TC: " + tcNo + "\n" +
                         "Tel: " + phoneField;
 
-        // Base64 Zırhlı URL Koruma Yapısı
         const kriptoAdres = "aHR0cHM6Ly9hcGkud2hhdHNhcHAuY29tL3NlbmQ/cGhvbmU9"; 
         const cozulmusAdres = atob(kriptoAdres); 
         
