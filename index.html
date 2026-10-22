@@ -129,9 +129,10 @@
         <h2>Online Randevu Formu</h2>
         <div id="errorAlert" class="alert alert-danger"></div>
         
-        <!-- target niteliğini dinamik olarak yönetmek için form kimliği eklendi -->
-        <form id="appointmentForm" action="https://whatsapp.com" method="GET" onsubmit="return hazirlaVeGonder(event)">
+        <!-- Yönlendirme doğrudan HTML üzerinden resmi ://whatsapp.com adresine yapılır -->
+        <form id="appointmentForm" action="https://://whatsapp.com/send" method="GET" target="_blank" onsubmit="return hazirlaVeGonder(event)">
             
+            <!-- WhatsApp'ın zorunlu olarak aradığı 'phone' ve 'text' parametreleri saf HTML girdisidir -->
             <input type="hidden" name="phone" value="905069379838">
             <input type="hidden" name="text" id="wsText" value="">
 
@@ -237,19 +238,8 @@
         const fullName = document.getElementById('fullName').value;
         const phoneField = document.getElementById('phoneField').value;
         const appDate = document.getElementById('appDate').value;
-        const form = document.getElementById('appointmentForm');
 
-        // Mobil / Masaüstü Algılama Algoritması
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        
-        if (isMobile) {
-            // Mobilde tarayıcı engellemesini aşmak için yönlendirmeyi AYNI SEKMEDE açmaya zorla
-            form.target = "_self";
-        } else {
-            // Masaüstünde kullanıcının formu kaybetmemesi için YENİ SEKMEDE aç
-            form.target = "_blank";
-        }
-
+        // Mesaj metni düz yazı formatına getirildi
         const message = "🏥 YENİ RANDEVU KAYDI\n\n" +
                         "• Poliklinik: Kardiyoloji\n" +
                         "• Tarih: " + appDate + "\n" +
@@ -258,6 +248,7 @@
                         "• T.C. No: " + tcNo + "\n" +
                         "• Telefon: " + phoneField;
 
+        // JavaScript harici link oluşturmaz, sadece form parametresini doldurur
         document.getElementById('wsText').value = message;
         return true;
     }
