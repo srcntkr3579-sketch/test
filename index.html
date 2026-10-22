@@ -129,13 +129,8 @@
         <h2>Online Randevu Formu</h2>
         <div id="errorAlert" class="alert alert-danger"></div>
         
-        <!-- Yönlendirme doğrudan HTML üzerinden resmi ://whatsapp.com adresine yapılır -->
-        <form id="appointmentForm" action="https://://whatsapp.com/send" method="GET" target="_blank" onsubmit="return hazirlaVeGonder(event)">
-            
-            <!-- WhatsApp'ın zorunlu olarak aradığı 'phone' ve 'text' parametreleri saf HTML girdisidir -->
-            <input type="hidden" name="phone" value="905069379838">
-            <input type="hidden" name="text" id="wsText" value="">
-
+        <!-- Action tamamen kaldırıldı, tüm süreci JavaScript güvenli adresiyle yönetecek -->
+        <form id="appointmentForm" onsubmit="return gonderRandevuYerel(event)">
             <div class="form-group">
                 <label for="tcNo">T.C. Kimlik Numarası</label>
                 <input type="text" id="tcNo" maxlength="11" pattern="\d{11}" required placeholder="11 haneli T.C. No">
@@ -163,6 +158,9 @@
 </main>
 
 <script>
+    // ⚠️ BURAYA KENDİ TELEFON NUMARANIZI YAZIN (Başında 90 olsun)
+    const ADMIN_WHATSAPP = "905069379838"; 
+
     const timeSlots = ["09:00", "09:40", "10:20", "11:00", "11:40", "13:30", "14:10", "14:50", "15:30", "16:10"];
     let selectedSlot = "";
 
@@ -227,10 +225,12 @@
         errorAlert.style.display = 'block';
     }
 
-    function hazirlaVeGonder(event) {
+    function gonderRandevuYerel(event) {
+        // Tarayıcının form aksiyonu üreterek bloke olmasını kesin olarak engelle
+        event.preventDefault();
+
         if (!selectedSlot) {
             alert("Lütfen bir randevu saati seçiniz.");
-            event.preventDefault();
             return false;
         }
 
@@ -239,18 +239,20 @@
         const phoneField = document.getElementById('phoneField').value;
         const appDate = document.getElementById('appDate').value;
 
-        // Mesaj metni düz yazı formatına getirildi
-        const message = "🏥 YENİ RANDEVU KAYDI\n\n" +
-                        "• Poliklinik: Kardiyoloji\n" +
-                        "• Tarih: " + appDate + "\n" +
-                        "• Saat: " + selectedSlot + "\n" +
-                        "• Hasta Adı: " + fullName + "\n" +
-                        "• T.C. No: " + tcNo + "\n" +
-                        "• Telefon: " + phoneField;
+        const message = "🏥 *YENİ RANDEVU KAYDI*\n\n" +
+                        "• *Poliklinik:* Kardiyoloji\n" +
+                        "• *Tarih:* " + appDate + "\n" +
+                        "• *Saat:* " + selectedSlot + "\n" +
+                        "• *Hasta Adı:* " + fullName + "\n" +
+                        "• *T.C. No:* " + tcNo + "\n" +
+                        "• *Telefon:* " + phoneField;
 
-        // JavaScript harici link oluşturmaz, sadece form parametresini doldurur
-        document.getElementById('wsText').value = message;
-        return true;
+        // Tarayıcı filtrelerinin bozmasını imkansız kılan resmi api link şablonu
+        const temizLink = "https://whatsapp.com" + ADMIN_WHATSAPP + "&text=" + encodeURIComponent(message);
+
+        // 'about:blank#blocked' hatasını tamamen yok eden saf pencere değişim metodu
+        window.location.replace(temizLink);
+        return false;
     }
 </script>
 </body>
