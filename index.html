@@ -68,27 +68,6 @@
             outline: none;
             border-color: #dc3545;
         }
-        .kvkk-container {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-            margin-top: 20px;
-            margin-bottom: 15px;
-            background: #fff5f5;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid #f5c6cb;
-        }
-        .kvkk-container input {
-            width: auto;
-            margin-top: 3px;
-            cursor: pointer;
-        }
-        .kvkk-text {
-            font-size: 12px;
-            color: #555;
-            line-height: 1.5;
-        }
         .whatsapp-submit {
             display: block;
             background-color: #25d366;
@@ -134,20 +113,11 @@
             border-radius: 6px;
             cursor: pointer;
             font-weight: 500;
-            transition: all 0.2s;
         }
         .slot-btn.selected {
             background: #dc3545;
             color: white;
             border-color: #dc3545;
-        }
-        /* Dolu (Pasif) saat butonlarının görsel stili */
-        .slot-btn.disabled {
-            background: #e9ecef;
-            color: #adb5bd;
-            border-color: #dee2e6;
-            cursor: not-allowed;
-            text-decoration: line-through;
         }
     </style>
 </head>
@@ -182,14 +152,6 @@
                 <div class="slot-container" id="slotsWrapper"></div>
             </div>
             
-            <!-- KVKK Onay Kutusu Alanı -->
-            <div class="kvkk-container">
-                <input type="checkbox" id="kvkkCheck" required>
-                <label for="kvkkCheck" class="kvkk-text">
-                    Sağlık hizmetlerinin planlanması ve randevu takibinin yapılması amacıyla kişisel verilerimin KVKK Aydınlatma Metni doğrultusunda işlenmesini ve randevu detaylarının WhatsApp üzerinden poliklinik yönetimine iletilmesini kabul ediyorum.
-                </label>
-            </div>
-            
             <button type="submit" class="whatsapp-submit">Randevuyu Onayla ve WhatsApp ile Gönder</button>
         </form>
     </div>
@@ -197,6 +159,8 @@
 
 <script>
     const ADMIN_WHATSAPP = "905069379838"; 
+    
+    // 08:30-10:00 aralığında tam 10 randevu oluşturacak yeni zaman serisi
     const timeSlots = ["08:30", "08:40", "08:50", "09:00", "09:10", "09:20", "09:30", "09:40", "09:50", "10:00"];
     let selectedSlot = "";
 
@@ -239,38 +203,16 @@
         }
 
         slotSection.style.display = 'block';
-
-        // Seçilen güne göre benzersiz ama sabit rastgele dolu saatler üretme algoritması (Tarih tohumlu simülasyon)
-        const seed = day + month + year;
-        const disabledIndices = [];
-        // Her tarih seçildiğinde rastgele 3 adet saati devre dışı bırakır
-        for (let i = 0; i < 3; i++) {
-            const index = Math.abs(Math.sin(seed + i) * 10) | 0;
-            if (!disabledIndices.includes(index)) {
-                disabledIndices.push(index);
-            }
-        }
-
-        timeSlots.forEach((slot, idx) => {
+        timeSlots.forEach(slot => {
             const btn = document.createElement('div');
             btn.className = 'slot-btn';
             btn.innerText = slot;
-            
-            // Eğer saat "Dolu" listesindeyse pasif yap
-            if (disabledIndices.includes(idx)) {
-                btn.classList.add('disabled');
-                btn.title = "Bu randevu saati doludur.";
-            } else {
-                btn.onclick = function() { selectSlotTime(btn, slot); };
-            }
+            btn.onclick = function() { selectSlotTime(btn, slot); };
             slotsWrapper.appendChild(btn);
         });
     }
 
     function selectSlotTime(element, slot) {
-        // Zaten dolu olan saatin seçilmesini engelle
-        if (element.classList.contains('disabled')) return;
-
         const buttons = document.querySelectorAll('.slot-btn');
         buttons.forEach(b => b.classList.remove('selected'));
         element.classList.add('selected');
@@ -284,3 +226,35 @@
     }
 
     function gonderRandevuZirhli(event) {
+        event.preventDefault();
+
+        if (!selectedSlot) {
+            alert("Lütfen bir randevu saati seçiniz.");
+            return false;
+        }
+
+        const tcNo = document.getElementById('tcNo').value;
+        const fullName = document.getElementById('fullName').value;
+        const phoneField = document.getElementById('phoneField').value;
+        const appDate = document.getElementById('appDate').value;
+
+        const message = "🏥 RANDEVU TALEBI\n\n" +
+                        "Poliklinik: Kardiyoloji\n" +
+                        "Tarih: " + appDate + "\n" +
+                        "Saat: " + selectedSlot + "\n" +
+                        "Hasta: " + fullName + "\n" +
+                        "TC: " + tcNo + "\n" +
+                        "Tel: " + phoneField;
+
+        // Base64 Zırhlı URL Koruma Yapısı
+        const kriptoAdres = "aHR0cHM6Ly9hcGkud2hhdHNhcHAuY29tL3NlbmQ/cGhvbmU9"; 
+        const cozulmusAdres = atob(kriptoAdres); 
+        
+        const finalUrl = cozulmusAdres + ADMIN_WHATSAPP + "&text=" + encodeURIComponent(message);
+
+        window.location.href = finalUrl;
+        return false;
+    }
+</script>
+</body>
+</html>
